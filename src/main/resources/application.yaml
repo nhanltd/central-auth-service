@@ -1,1 +1,19 @@
-spring.application.name=central-auth-service
+
+spring:
+  datasource:
+    url: "jdbc:mysql://localhost:3306/central_auth_service"
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+server:
+  port: 8080
+  servlet:
+    context-path: /identity
+springdoc:
+  api-docs:
+    path: /v1/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

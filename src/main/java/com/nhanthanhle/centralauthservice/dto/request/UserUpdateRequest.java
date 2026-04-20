@@ -2,20 +2,11 @@ package com.nhanthanhle.centralauthservice.dto.request;
 
 import java.time.LocalDate;
 
-public class UserCreationRequest {
-    private String username;
+public class UserUpdateRequest {
     private String password;
     private String lastname;
     private String firstname;
     private LocalDate dob;
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
 
     public String getPassword() {
         return password;

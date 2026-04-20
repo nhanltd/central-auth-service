@@ -1,4 +1,45 @@
 package com.nhanthanhle.centralauthservice.controller;
 
+import com.nhanthanhle.centralauthservice.dto.request.UserCreationRequest;
+import com.nhanthanhle.centralauthservice.dto.request.UserUpdateRequest;
+import com.nhanthanhle.centralauthservice.entity.User;
+import com.nhanthanhle.centralauthservice.service.UserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/users")
+@Tag(name = "API FOR USERS", description = "CRUD USER Create Read Update Delete")
 public class UserController {
+    private final UserService userService;
+
+    @PostMapping()
+    public User createUser(@RequestBody UserCreationRequest request) {
+        return userService.createUserRequest(request);
+    }
+
+    @GetMapping()
+    public List<User> getUsers() {
+        return userService.getUsers();
+    }
+
+
+    @GetMapping("/{userId}")
+    public User getUser(@PathVariable("userId") String userId) {
+        return userService.getUser(userId);
+    }
+
+    @PutMapping("/{userId}")
+    public User updateUser(@PathVariable("userId") String userId, UserUpdateRequest request) {
+        return userService.updateUser(userId, request);
+    }
+
+    @DeleteMapping("/{userId}")
+    public void deleteUser(@PathVariable("userId") String userId) {
+        userService.deleteUser(userId);
+    }
 }
