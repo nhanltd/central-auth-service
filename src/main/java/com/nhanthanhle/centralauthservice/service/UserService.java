@@ -16,7 +16,9 @@ public class UserService {
 
     public User createUserRequest(UserCreationRequest userCreationRequest) {
         User user = new User();
-
+        if (userRepository.existsById(userCreationRequest.getUsername())) {
+            throw new RuntimeException("USER HAVED IN DB");
+        }
         user.setUsername(userCreationRequest.getUsername());
         user.setFirstname(userCreationRequest.getFirstname());
         user.setLastname(userCreationRequest.getLastname());
@@ -24,8 +26,6 @@ public class UserService {
         user.setDob(userCreationRequest.getDob());
 
         return userRepository.save(user);
-
-
     }
 
     public List<User> getUsers() {
