@@ -3,6 +3,8 @@ package com.nhanthanhle.centralauthservice.service;
 import com.nhanthanhle.centralauthservice.dto.request.UserCreationRequest;
 import com.nhanthanhle.centralauthservice.dto.request.UserUpdateRequest;
 import com.nhanthanhle.centralauthservice.entity.User;
+import com.nhanthanhle.centralauthservice.exception.AppException;
+import com.nhanthanhle.centralauthservice.exception.ErrorCode;
 import com.nhanthanhle.centralauthservice.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,8 +18,8 @@ public class UserService {
 
     public User createUserRequest(UserCreationRequest userCreationRequest) {
         User user = new User();
-        if (userRepository.existsById(userCreationRequest.getUsername())) {
-            throw new RuntimeException("USER HAVED IN DB");
+        if (userRepository.existsByUsername(userCreationRequest.getUsername())) {
+            throw new AppException(ErrorCode.USER_EXISTED);
         }
         user.setUsername(userCreationRequest.getUsername());
         user.setFirstname(userCreationRequest.getFirstname());
@@ -38,7 +40,7 @@ public class UserService {
 
     public User updateUser(String id, UserUpdateRequest request) {
 
-        if (!userRepository.existsById(id)) {
+        if (!userRepository.existsById(id)) { /// false -> thr
             throw new RuntimeException("Dont have user in db");
         }
         User user = getUser(id);

@@ -17,3 +17,9 @@ springdoc:
     path: /v1/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.hibernate.engine.jdbc.spi.SqlExceptionHelper: ERROR

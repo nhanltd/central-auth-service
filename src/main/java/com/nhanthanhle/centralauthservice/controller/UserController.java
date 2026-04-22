@@ -1,10 +1,12 @@
 package com.nhanthanhle.centralauthservice.controller;
 
+import com.nhanthanhle.centralauthservice.dto.request.ApiResponse;
 import com.nhanthanhle.centralauthservice.dto.request.UserCreationRequest;
 import com.nhanthanhle.centralauthservice.dto.request.UserUpdateRequest;
 import com.nhanthanhle.centralauthservice.entity.User;
 import com.nhanthanhle.centralauthservice.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,8 +20,10 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping()
-    public User createUser(@RequestBody UserCreationRequest request) {
-        return userService.createUserRequest(request);
+    public ApiResponse<User> createUser(@Valid @RequestBody UserCreationRequest request) {
+        ApiResponse<User> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(userService.createUserRequest(request));
+        return apiResponse;
     }
 
     @GetMapping()
