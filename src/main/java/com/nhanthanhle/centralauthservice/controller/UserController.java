@@ -3,6 +3,7 @@ package com.nhanthanhle.centralauthservice.controller;
 import com.nhanthanhle.centralauthservice.dto.request.ApiResponse;
 import com.nhanthanhle.centralauthservice.dto.request.UserCreationRequest;
 import com.nhanthanhle.centralauthservice.dto.request.UserUpdateRequest;
+import com.nhanthanhle.centralauthservice.dto.response.UserResponse;
 import com.nhanthanhle.centralauthservice.entity.User;
 import com.nhanthanhle.centralauthservice.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,12 +34,12 @@ public class UserController {
 
 
     @GetMapping("/{userId}")
-    public User getUser(@PathVariable("userId") String userId) {
+    public UserResponse getUser(@PathVariable("userId") String userId) {
         return userService.getUser(userId);
     }
 
     @PutMapping("/{userId}")
-    public User updateUser(@PathVariable("userId") String userId, @RequestBody UserUpdateRequest request) {
+    public UserResponse updateUser(@PathVariable("userId") String userId, @RequestBody UserUpdateRequest request) {
         return userService.updateUser(userId, request);
     }
 
