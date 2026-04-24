@@ -5,27 +5,27 @@ import com.nhanthanhle.centralauthservice.dto.request.UserUpdateRequest;
 import com.nhanthanhle.centralauthservice.entity.User;
 import com.nhanthanhle.centralauthservice.exception.AppException;
 import com.nhanthanhle.centralauthservice.exception.ErrorCode;
+import com.nhanthanhle.centralauthservice.mapper.UserMapper;
 import com.nhanthanhle.centralauthservice.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    private final UserMapper userMapper;
     public User createUserRequest(UserCreationRequest userCreationRequest) {
-        User user = new User();
         if (userRepository.existsByUsername(userCreationRequest.getUsername())) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
-        user.setUsername(userCreationRequest.getUsername());
-        user.setFirstname(userCreationRequest.getFirstname());
-        user.setLastname(userCreationRequest.getLastname());
-        user.setPassword(userCreationRequest.getPassword());
-        user.setDob(userCreationRequest.getDob());
+        User user = userMapper.toUser(userCreationRequest);
+
 
         return userRepository.save(user);
     }
@@ -44,10 +44,12 @@ public class UserService {
             throw new RuntimeException("Dont have user in db");
         }
         User user = getUser(id);
-        user.setPassword(request.getPassword());
-        user.setDob(request.getDob());
-        user.setLastname(request.getLastname());
-        user.setFirstname(request.getFirstname());
+        userMapper.updateUser(request, user);
+
+        System.out.println(user.getPassword());
+        System.out.println(user.getLastname());
+        System.out.println(user.getFirstname());
+        System.out.println(user.getDob());
 
         return userRepository.save(user);
     }
