@@ -23,3 +23,6 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
     org.hibernate.engine.jdbc.spi.SqlExceptionHelper: ERROR
+
+jwt:
+  signerKey: "60de726f31ded068a7a1d7fe75e76c1aed2c91ee339eed322e5bfe3f9e9a0a66"

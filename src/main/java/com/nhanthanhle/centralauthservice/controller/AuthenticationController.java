@@ -2,8 +2,11 @@ package com.nhanthanhle.centralauthservice.controller;
 
 import com.nhanthanhle.centralauthservice.dto.request.ApiResponse;
 import com.nhanthanhle.centralauthservice.dto.request.AuthenticationRequest;
+import com.nhanthanhle.centralauthservice.dto.request.IntrospectRequest;
 import com.nhanthanhle.centralauthservice.dto.response.AuthenticationResponse;
+import com.nhanthanhle.centralauthservice.dto.response.IntrospectResponse;
 import com.nhanthanhle.centralauthservice.service.AuthenticationService;
+import com.nimbusds.jose.JOSEException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -15,31 +18,63 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.text.ParseException;
+
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationController {
     AuthenticationService authenticationService;
+    private final JsonMapper.Builder builder;
 
 
-    @PostMapping("/log-in")
-    ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
-        ApiResponse<AuthenticationResponse> apiResponse = new ApiResponse();
-        boolean res = authenticationService.authenticate(request);
+//    @PostMapping("/log-in")
+//    ApiResponse<AuthenticationResponse> login(@RequestBody AuthenticationRequest request) {
+//        ApiResponse<AuthenticationResponse> apiResponse = new ApiResponse();
+////        var res = authenticationService.authenticate(request);
+//
+////        AuthenticationResponse authenticationResponse = AuthenticationResponse.builder()
+////                .authenticated(res)
+////                .build();
+////
+////        apiResponse.setResult(authenticationResponse);
+//        AuthenticationResponse res = authenticationService.login(request);
+//
+//        apiResponse.setResult(res);
+//        return apiResponse;
+//    }
 
-//        return ApiResponse.<AuthenticationResponse>builder()
-//                .result(
-//                        AuthenticationResponse.builder()
-//                                .authenticated(res)
-//                                .build()
-//                )
-//                .build();
-        AuthenticationResponse authenticationResponse = AuthenticationResponse.builder()
-                .authenticated(res)
-                .build();
-
-        apiResponse.setResult(authenticationResponse);
-        return apiResponse;
+//    @PostMapping("/introspect")
+//    ApiResponse<IntrospectResponse> authenticate(@RequestBody IntrospectRequest request) {
+//        var result = authenticationService.authenticate(request);
+//        ApiResponse<IntrospectResponse> apiResponse = new ApiResponse<>();
+//
+//        apiResponse.setResult(result);
+//
+//        return apiResponse;
+//
+//    }
+    @PostMapping("/introspect")
+    ApiResponse<IntrospectResponse> authenticate(@RequestBody IntrospectRequest request)
+            throws ParseException, JOSEException {
+        var result = authenticationService.introspect(request);
+        return ApiResponse.<IntrospectResponse>builder().result(result).build();
     }
+//    @PostMapping("/token")
+//    ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request)
+//    {
+//        var result = authenticationService.authenticate(request);
+//        return ApiResponse.<AuthenticationResponse>builder()
+//                .result(result)
+//                .build();
+//    }
+
+
+    /// verify token
+        @PostMapping("/token")
+        ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
+            var result = authenticationService.authenticate(request);
+            return ApiResponse.<AuthenticationResponse>builder().result(result).build();
+}
 }

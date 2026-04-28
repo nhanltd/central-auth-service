@@ -1,4 +1,4 @@
-package com.nhanthanhle.centralauthservice.dto.response;
+package com.nhanthanhle.centralauthservice.dto.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -8,7 +8,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class AuthenticationResponse {
-    String token;
-    boolean authenticated;
+public class IntrospectRequest {
+   String token;
 }
