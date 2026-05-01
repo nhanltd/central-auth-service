@@ -39,6 +39,17 @@ public class AuthenticationService {
     @NonFinal // để ko inject vào constructor
     @Value("${jwt.signerKey}")
     protected String SIGNER_KEY;
+    public IntrospectResponse introspect1(IntrospectRequest request) throws JOSEException, ParseException {
+
+        var token = request.getToken();
+        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+        SignedJWT signedJWT = SignedJWT.parse(token);
+        var verifed = signedJWT.verify(verifier);
+        Date expityTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        return IntrospectResponse.builder()
+                .valid(verifed && expityTime.after(new Date()))
+                .build();
+    }
 
 
     public IntrospectResponse introspect(IntrospectRequest request)
@@ -67,7 +78,7 @@ public class AuthenticationService {
         if (!authenticated) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
-        var token = generateToken(authenticationRequest.getUsername());
+        var token = generateTokenv1(authenticationRequest.getUsername());
 
         return AuthenticationResponse.builder()
                 .token(token)
@@ -97,6 +108,35 @@ public class AuthenticationService {
             log.error("Cannot create token", e);
             throw new RuntimeException(e);
         }
+    }
+
+    private String generateTokenv1(String username) {
+        // 1 token gồm có header.payload và signature
+        JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512); // header
+        JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
+                .subject(username)
+                .issuer("nhanthanhle.centralauthservice")
+                .issueTime(new Date()) // thời gian khởi tạo
+                .expirationTime(new Date(System.currentTimeMillis() + 3600 * 1000)) // thời gian token này hết hạn: 1h
+                .claim("NhanCustomClaim", "nhanCustom")
+                .build();
+
+        // tạo payload
+        Payload payload = new Payload(jwtClaimsSet.toJSONObject());
+
+        // tạo jws object
+        JWSObject jwsObject = new JWSObject(jwsHeader, payload);
+
+        // sign chữ ký với mã macsinger
+
+        try {
+            jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes())); // dong dấu đỏ vào tài liệu
+            return jwsObject.serialize(); // biến jwsobject thành 1 chuỗi string để gửi đi,vi http chỉ nhân dưới chuỗi text
+        } catch (JOSEException e) {
+            log.error("Cannot create token", e);
+            throw new RuntimeException(e);
+        }
+
     }
 
 }
