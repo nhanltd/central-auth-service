@@ -9,10 +9,13 @@ import com.nhanthanhle.centralauthservice.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/users")
@@ -28,8 +31,15 @@ public class UserController {
     }
 
     @GetMapping()
-    public List<User> getUsers() {
-        return userService.getUsers();
+    public ApiResponse<List<UserResponse>> getUsers() {
+        // trong spring security
+        // để lấy thông tin của user đang đăng nhập hiện tại
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        log.info("Username: {}", authentication.getName());
+        authentication.getAuthorities().forEach(grantedAuthority -> log.info(grantedAuthority.getAuthority()));
+        return ApiResponse.<List<UserResponse>>builder()
+                .result(userService.getUsers())
+                .build();
     }
 
 

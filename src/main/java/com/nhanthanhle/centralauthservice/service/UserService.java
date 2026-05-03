@@ -4,6 +4,7 @@ import com.nhanthanhle.centralauthservice.dto.request.UserCreationRequest;
 import com.nhanthanhle.centralauthservice.dto.request.UserUpdateRequest;
 import com.nhanthanhle.centralauthservice.dto.response.UserResponse;
 import com.nhanthanhle.centralauthservice.entity.User;
+import com.nhanthanhle.centralauthservice.enums.Role;
 import com.nhanthanhle.centralauthservice.exception.AppException;
 import com.nhanthanhle.centralauthservice.exception.ErrorCode;
 import com.nhanthanhle.centralauthservice.mapper.UserMapper;
@@ -17,7 +18,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -34,11 +37,14 @@ public class UserService {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
         user.setPassword(passwordEncoder.encode(userCreationRequest.getPassword()));
 
+        Set<String> roles = new HashSet<>();
+        roles.add(Role.USER.name());
+        user.setRoles(roles); // role mặc định
         return userRepository.save(user); 
     }
 
-    public List<User> getUsers() {
-        return userRepository.findAll();
+    public List<UserResponse> getUsers() {
+        return userRepository.findAll().stream().map(userMapper::toUserResponse).toList();
     }
 
     public UserResponse getUser(String id) {

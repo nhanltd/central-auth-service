@@ -28,48 +28,12 @@ public class AuthenticationController {
     AuthenticationService authenticationService;
     private final JsonMapper.Builder builder;
 
-
-//    @PostMapping("/log-in")
-//    ApiResponse<AuthenticationResponse> login(@RequestBody AuthenticationRequest request) {
-//        ApiResponse<AuthenticationResponse> apiResponse = new ApiResponse();
-////        var res = authenticationService.authenticate(request);
-//
-////        AuthenticationResponse authenticationResponse = AuthenticationResponse.builder()
-////                .authenticated(res)
-////                .build();
-////
-////        apiResponse.setResult(authenticationResponse);
-//        AuthenticationResponse res = authenticationService.login(request);
-//
-//        apiResponse.setResult(res);
-//        return apiResponse;
-//    }
-
-//    @PostMapping("/introspect")
-//    ApiResponse<IntrospectResponse> authenticate(@RequestBody IntrospectRequest request) {
-//        var result = authenticationService.authenticate(request);
-//        ApiResponse<IntrospectResponse> apiResponse = new ApiResponse<>();
-//
-//        apiResponse.setResult(result);
-//
-//        return apiResponse;
-//
-//    }
     @PostMapping("/introspect")
     ApiResponse<IntrospectResponse> authenticate(@RequestBody IntrospectRequest request)
             throws ParseException, JOSEException {
         var result = authenticationService.introspect(request);
         return ApiResponse.<IntrospectResponse>builder().result(result).build();
     }
-//    @PostMapping("/token")
-//    ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request)
-//    {
-//        var result = authenticationService.authenticate(request);
-//        return ApiResponse.<AuthenticationResponse>builder()
-//                .result(result)
-//                .build();
-//    }
-
 
     /// verify token
         @PostMapping("/token")
