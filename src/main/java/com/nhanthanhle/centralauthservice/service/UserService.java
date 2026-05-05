@@ -13,22 +13,37 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)
+@Slf4j
 public class UserService {
     UserRepository userRepository;
 
     final UserMapper userMapper;
+
+    public UserResponse getMyInfo() {
+        var context = SecurityContextHolder.getContext();
+        String username = (context.getAuthentication().getName());
+        User user = userRepository.findUserByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        return userMapper.toUserResponse(user);
+    }
     public User createUserRequest(UserCreationRequest userCreationRequest) {
         if (userRepository.existsByUsername(userCreationRequest.getUsername())) {
             throw new AppException(ErrorCode.USER_EXISTED);
@@ -42,12 +57,15 @@ public class UserService {
         user.setRoles(roles); // role mặc định
         return userRepository.save(user); 
     }
-
+    @PreAuthorize("hasRole('ADMIN')") // check có quyền rồi mới chạy hàm ở dưới
     public List<UserResponse> getUsers() {
+        log.info("In method getUsers");
         return userRepository.findAll().stream().map(userMapper::toUserResponse).toList();
     }
-
+    @PostAuthorize("returnObject.username == authentication.name") // chạy hàm dưới rồi mới chạy, thường dùng cho trường hợp check xem user trả về
+    // phải la user dang nhap ko
     public UserResponse getUser(String id) {
+        log.info("In method get a user");
         return userMapper.toUserResponse(
                 userRepository.findById(id)
                         .orElseThrow(() -> new RuntimeException("User not found")));

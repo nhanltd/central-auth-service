@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -20,7 +21,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import javax.crypto.spec.SecretKeySpec;
 
 @Configuration
-@EnableWebSecurity
+@EnableWebSecurity // kich hoat filter, bắt đầu chặn request từ bên ngoài vào
+@EnableMethodSecurity // kích hoạt filter tầng services
 public class SecurityConfig {
 
     private final String[] PUBLIC_ENDPOINTS = {"/users", "/auth/token", "/auth/introspect"};
@@ -33,7 +35,6 @@ public class SecurityConfig {
         //1. end point nào vào dđược, endpont nào không vào được
         httpSecurity.authorizeHttpRequests(request ->
                 request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.GET,"/users").hasRole(Role.ADMIN.name())
                         .anyRequest().authenticated()
         );
         // bỏ token vào thi no co the tra ve user
@@ -43,7 +44,11 @@ public class SecurityConfig {
                 oauth2.jwt(jwtConfigurer ->
                         jwtConfigurer.decoder(jwtDecoder())
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())
-                )); // giup decode jwt token ngta truyen vao
+
+                )
+
+                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
+           ); // giup decode jwt token ngta truyen vao
         // bảo vệ request khỏi cross size
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
         return httpSecurity.build();

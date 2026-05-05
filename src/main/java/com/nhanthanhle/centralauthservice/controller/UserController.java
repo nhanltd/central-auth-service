@@ -5,6 +5,7 @@ import com.nhanthanhle.centralauthservice.dto.request.UserCreationRequest;
 import com.nhanthanhle.centralauthservice.dto.request.UserUpdateRequest;
 import com.nhanthanhle.centralauthservice.dto.response.UserResponse;
 import com.nhanthanhle.centralauthservice.entity.User;
+import com.nhanthanhle.centralauthservice.mapper.UserMapper;
 import com.nhanthanhle.centralauthservice.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -22,7 +23,14 @@ import java.util.List;
 @Tag(name = "API FOR USERS", description = "CRUD USER Create Read Update Delete")
 public class UserController {
     private final UserService userService;
+    private final UserMapper userMapper;
 
+    @GetMapping("/myInfo")
+    public ApiResponse<UserResponse> getMyInfo() {
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.getMyInfo())
+                .build();
+    }
     @PostMapping()
     public ApiResponse<User> createUser(@Valid @RequestBody UserCreationRequest request) {
         ApiResponse<User> apiResponse = new ApiResponse<>();
