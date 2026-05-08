@@ -54,7 +54,7 @@ public class UserService {
 
         Set<String> roles = new HashSet<>();
         roles.add(Role.USER.name());
-        user.setRoles(roles); // role mặc định
+//        user.setRoles(roles); // role mặc định
         return userRepository.save(user); 
     }
     @PreAuthorize("hasRole('ADMIN')") // check có quyền rồi mới chạy hàm ở dưới
