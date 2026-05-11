@@ -1,5 +1,6 @@
 package com.nhanthanhle.centralauthservice.dto.response;
 
+import com.nhanthanhle.centralauthservice.entity.Role;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -17,6 +18,6 @@ public class UserResponse {
     String firstlame;
     String lastlame;
     LocalDate dob;
-    Set<String> roles;
+    Set<RoleResponse> roles;
 
 }

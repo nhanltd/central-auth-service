@@ -2,12 +2,14 @@ package com.nhanthanhle.centralauthservice.service;
 
 import com.nhanthanhle.centralauthservice.dto.request.UserCreationRequest;
 import com.nhanthanhle.centralauthservice.dto.request.UserUpdateRequest;
+import com.nhanthanhle.centralauthservice.dto.response.RoleResponse;
 import com.nhanthanhle.centralauthservice.dto.response.UserResponse;
 import com.nhanthanhle.centralauthservice.entity.User;
 import com.nhanthanhle.centralauthservice.enums.Role;
 import com.nhanthanhle.centralauthservice.exception.AppException;
 import com.nhanthanhle.centralauthservice.exception.ErrorCode;
 import com.nhanthanhle.centralauthservice.mapper.UserMapper;
+import com.nhanthanhle.centralauthservice.repository.RoleRepository;
 import com.nhanthanhle.centralauthservice.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -33,8 +35,9 @@ import java.util.Set;
 @Slf4j
 public class UserService {
     UserRepository userRepository;
-
+    RoleRepository roleRepository;
     final UserMapper userMapper;
+    PasswordEncoder passwordEncoder;
 
     public UserResponse getMyInfo() {
         var context = SecurityContextHolder.getContext();
@@ -54,10 +57,11 @@ public class UserService {
 
         Set<String> roles = new HashSet<>();
         roles.add(Role.USER.name());
-        user.setRoles(roles); // role mặc định
+//        user.setRoles(roles); // role mặc định
         return userRepository.save(user); 
     }
-    @PreAuthorize("hasRole('ADMIN')") // check có quyền rồi mới chạy hàm ở dưới
+//    @PreAuthorize("hasRole('ADMIN')") // check có quyền rồi mới chạy hàm ở dưới
+    @PreAuthorize("hasAuthority('APPROVE_POST')")
     public List<UserResponse> getUsers() {
         log.info("In method getUsers");
         return userRepository.findAll().stream().map(userMapper::toUserResponse).toList();
@@ -73,18 +77,15 @@ public class UserService {
 
 
 
-    public UserResponse updateUser(String id, UserUpdateRequest request) {
+    public UserResponse updateUser(String userId, UserUpdateRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        if (!userRepository.existsById(id)) { /// false -> thr
-            throw new RuntimeException("Dont have user in db");
-        }
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
-        userMapper.updateUser(request, user);
+        userMapper.updateUser(user, request);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        System.out.println(user.getPassword());
-        System.out.println(user.getLastname());
-        System.out.println(user.getFirstname());
-        System.out.println(user.getDob());
+        var roles = roleRepository.findAllById(request.getRoles()); // list roles
+        user.setRoles(new HashSet<>(roles));
 
         return userMapper.toUserResponse(userRepository.save(user));
     }
