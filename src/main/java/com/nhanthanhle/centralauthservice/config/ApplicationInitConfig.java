@@ -1,5 +1,4 @@
 package com.nhanthanhle.centralauthservice.config;
-
 import com.nhanthanhle.centralauthservice.entity.User;
 import com.nhanthanhle.centralauthservice.enums.Role;
 import com.nhanthanhle.centralauthservice.repository.UserRepository;

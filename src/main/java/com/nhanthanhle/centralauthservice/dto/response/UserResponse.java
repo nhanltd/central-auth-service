@@ -18,6 +18,6 @@ public class UserResponse {
     String firstlame;
     String lastlame;
     LocalDate dob;
-    Set<Role> roles;
+    Set<RoleResponse> roles;
 
 }

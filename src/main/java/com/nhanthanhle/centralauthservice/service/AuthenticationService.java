@@ -1,5 +1,4 @@
 package com.nhanthanhle.centralauthservice.service;
-
 import com.nhanthanhle.centralauthservice.dto.request.AuthenticationRequest;
 import com.nhanthanhle.centralauthservice.dto.request.IntrospectRequest;
 import com.nhanthanhle.centralauthservice.dto.response.AuthenticationResponse;
@@ -23,8 +22,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-
-import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.StringJoiner;
@@ -62,7 +59,7 @@ public class AuthenticationService {
 
         // check password matches
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
-    /// raw password == user password
+        /// raw password == user password
         boolean authenticated = passwordEncoder.matches(authenticationRequest.getPassword(), user.getPassword());
         if (!authenticated) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
@@ -76,11 +73,16 @@ public class AuthenticationService {
 
     }
 
-    private String buildScope(User user) {
+    private String buildScope(User user){
         StringJoiner stringJoiner = new StringJoiner(" ");
-//        if (!CollectionUtils.isEmpty(user.getRoles())) {
-//            user.getRoles().forEach(stringJoiner::add);
-//        }
+        if (!CollectionUtils.isEmpty(user.getRoles()))
+            user.getRoles().forEach(role -> {
+                stringJoiner.add("ROLE_" + role.getName());
+                if (!CollectionUtils.isEmpty(role.getPermissions()))
+                    role.getPermissions()
+                            .forEach(permission -> stringJoiner.add(permission.getName()));
+            });
+
         return stringJoiner.toString();
     }
 
@@ -94,11 +96,9 @@ public class AuthenticationService {
                 .expirationTime(new Date(System.currentTimeMillis() + 3600 * 1000)) // 1h
                 .claim("scope", buildScope(user))
                 .build();
-        // claims là các thông tin lưu trong payload: ví dụ chuỗi gồm sub, role,.. th sub và role là claim
         Payload payload = new Payload(claimsSet.toJSONObject());
         JWSObject jwsObject  = new JWSObject(jwsHeader, payload); // jws gồm header và payload
 
-        // ký vào token, de sign cần 1 thuật toán để sign
         try {
             jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
             return jwsObject.serialize();
