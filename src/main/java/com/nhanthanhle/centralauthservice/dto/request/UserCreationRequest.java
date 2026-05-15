@@ -1,5 +1,6 @@
 package com.nhanthanhle.centralauthservice.dto.request;
 
+import com.nhanthanhle.centralauthservice.validator.DobConstraint;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -19,6 +20,7 @@ public class UserCreationRequest {
     private String password;
     private String lastname;
     private String firstname;
+    @DobConstraint(min = 18, message = "INVALID_DOB")
     private LocalDate dob;
 
 
