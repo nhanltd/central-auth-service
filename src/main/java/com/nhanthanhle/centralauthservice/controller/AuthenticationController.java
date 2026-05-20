@@ -3,6 +3,7 @@ package com.nhanthanhle.centralauthservice.controller;
 import com.nhanthanhle.centralauthservice.dto.request.ApiResponse;
 import com.nhanthanhle.centralauthservice.dto.request.AuthenticationRequest;
 import com.nhanthanhle.centralauthservice.dto.request.IntrospectRequest;
+import com.nhanthanhle.centralauthservice.dto.request.LogoutRequest;
 import com.nhanthanhle.centralauthservice.dto.response.AuthenticationResponse;
 import com.nhanthanhle.centralauthservice.dto.response.IntrospectResponse;
 import com.nhanthanhle.centralauthservice.service.AuthenticationService;
@@ -41,4 +42,11 @@ public class AuthenticationController {
             var result = authenticationService.authenticate(request);
             return ApiResponse.<AuthenticationResponse>builder().result(result).build();
 }
+
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout(@RequestBody LogoutRequest request) throws ParseException, JOSEException {
+            authenticationService.logout(request);
+            return ApiResponse.<Void>builder().build();
+
+    }
 }

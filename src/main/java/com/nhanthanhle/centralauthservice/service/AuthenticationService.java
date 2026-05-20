@@ -1,11 +1,15 @@
 package com.nhanthanhle.centralauthservice.service;
+import com.nhanthanhle.centralauthservice.dto.request.ApiResponse;
 import com.nhanthanhle.centralauthservice.dto.request.AuthenticationRequest;
 import com.nhanthanhle.centralauthservice.dto.request.IntrospectRequest;
+import com.nhanthanhle.centralauthservice.dto.request.LogoutRequest;
 import com.nhanthanhle.centralauthservice.dto.response.AuthenticationResponse;
 import com.nhanthanhle.centralauthservice.dto.response.IntrospectResponse;
+import com.nhanthanhle.centralauthservice.entity.InvalidatedToken;
 import com.nhanthanhle.centralauthservice.entity.User;
 import com.nhanthanhle.centralauthservice.exception.AppException;
 import com.nhanthanhle.centralauthservice.exception.ErrorCode;
+import com.nhanthanhle.centralauthservice.repository.InvalidatedTokenRepository;
 import com.nhanthanhle.centralauthservice.repository.UserRepository;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -22,9 +26,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 import java.text.ParseException;
 import java.util.Date;
 import java.util.StringJoiner;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -33,21 +41,47 @@ import java.util.StringJoiner;
 public class AuthenticationService {
 
     UserRepository userRepository;
+    InvalidatedTokenRepository invalidatedTokenRepository;
     @NonFinal // để ko inject vào constructor
     @Value("${jwt.signerKey}")
     protected String SIGNER_KEY;
 
-
-    public IntrospectResponse introspect(IntrospectRequest request)
-            throws JOSEException, ParseException {
-        var token = request.getToken();
+    private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
         SignedJWT signedJWT = SignedJWT.parse(token);
         var verifed = signedJWT.verify(verifier);
         Date expityTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        if (!(verifed && expityTime.after(new Date())))
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
 
+        if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+        return signedJWT;
+    }
+    public void logout(LogoutRequest request) throws ParseException, JOSEException {
+        var signToken = verifyToken(request.getToken());
+        String jit = signToken.getJWTClaimsSet().getJWTID();
+        Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
+
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(jit)
+                .expiryTime(expiryTime)
+                .build();
+    }
+
+    public IntrospectResponse introspect(IntrospectRequest request)
+            throws JOSEException, ParseException {
+        var token = request.getToken();
+        boolean isValid = true;
+        try {
+            verifyToken(token);
+
+        } catch (AppException e) {
+            isValid = false;
+        }
         return IntrospectResponse.builder()
-                .valid(verifed && expityTime.after(new Date()))
+                .valid(isValid)
                 .build();
     }
 
@@ -94,6 +128,7 @@ public class AuthenticationService {
                 .issuer("nhanthanhle.centralauthservice")
                 .issueTime(new Date())
                 .expirationTime(new Date(System.currentTimeMillis() + 3600 * 1000)) // 1h
+                .jwtID(UUID.randomUUID().toString()) // random unique string
                 .claim("scope", buildScope(user))
                 .build();
         Payload payload = new Payload(claimsSet.toJSONObject());

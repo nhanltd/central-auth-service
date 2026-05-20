@@ -1,5 +1,6 @@
 package com.nhanthanhle.centralauthservice.config;
 import com.nhanthanhle.centralauthservice.enums.Role;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,10 +26,12 @@ import javax.crypto.spec.SecretKeySpec;
 @EnableMethodSecurity // kích hoạt filter tầng services
 public class SecurityConfig {
 
-    private final String[] PUBLIC_ENDPOINTS = {"/users", "/auth/token", "/auth/introspect"};
+    private final String[] PUBLIC_ENDPOINTS = {"/users", "/auth/token", "/auth/introspect", "/logout"};
     @Value("${jwt.signerKey}")
     private String signerKey;
 
+    @Autowired
+    private CustomJwtDecoder customJwtDecoder;
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
 
@@ -42,7 +45,7 @@ public class SecurityConfig {
            httpSecurity.oauth2ResourceServer(oauth2 ->
                 // nói với spring là tôi dang nhận jwt
                 oauth2.jwt(jwtConfigurer ->
-                        jwtConfigurer.decoder(jwtDecoder())
+                        jwtConfigurer.decoder(customJwtDecoder)
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())
 
                 )
