@@ -1,9 +1,6 @@
 package com.nhanthanhle.centralauthservice.controller;
 
-import com.nhanthanhle.centralauthservice.dto.request.ApiResponse;
-import com.nhanthanhle.centralauthservice.dto.request.AuthenticationRequest;
-import com.nhanthanhle.centralauthservice.dto.request.IntrospectRequest;
-import com.nhanthanhle.centralauthservice.dto.request.LogoutRequest;
+import com.nhanthanhle.centralauthservice.dto.request.*;
 import com.nhanthanhle.centralauthservice.dto.response.AuthenticationResponse;
 import com.nhanthanhle.centralauthservice.dto.response.IntrospectResponse;
 import com.nhanthanhle.centralauthservice.service.AuthenticationService;
@@ -28,6 +25,16 @@ import java.text.ParseException;
 public class AuthenticationController {
     AuthenticationService authenticationService;
     private final JsonMapper.Builder builder;
+
+    @PostMapping("/refresh")
+    ApiResponse<AuthenticationResponse> refreshToken(@RequestBody RefreshTokenRequest request)
+            throws ParseException, JOSEException {
+
+        return ApiResponse.<AuthenticationResponse>builder()
+                .result(authenticationService.refreshToken(request))
+                .build();
+
+    }
 
     @PostMapping("/introspect")
     ApiResponse<IntrospectResponse> authenticate(@RequestBody IntrospectRequest request)

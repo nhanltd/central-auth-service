@@ -1,8 +1,5 @@
 package com.nhanthanhle.centralauthservice.service;
-import com.nhanthanhle.centralauthservice.dto.request.ApiResponse;
-import com.nhanthanhle.centralauthservice.dto.request.AuthenticationRequest;
-import com.nhanthanhle.centralauthservice.dto.request.IntrospectRequest;
-import com.nhanthanhle.centralauthservice.dto.request.LogoutRequest;
+import com.nhanthanhle.centralauthservice.dto.request.*;
 import com.nhanthanhle.centralauthservice.dto.response.AuthenticationResponse;
 import com.nhanthanhle.centralauthservice.dto.response.IntrospectResponse;
 import com.nhanthanhle.centralauthservice.entity.InvalidatedToken;
@@ -83,6 +80,31 @@ public class AuthenticationService {
         return IntrospectResponse.builder()
                 .valid(isValid)
                 .build();
+    }
+
+    public AuthenticationResponse refreshToken(RefreshTokenRequest request) throws ParseException, JOSEException {
+
+        var signJWT = verifyToken(request.getToken());
+        var jit = signJWT.getJWTClaimsSet().getJWTID();
+        var expiryTime = signJWT.getJWTClaimsSet().getExpirationTime();
+
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(jit)
+                .expiryTime(expiryTime)
+                .build();
+
+        invalidatedTokenRepository.save(invalidatedToken);
+        var username = signJWT.getJWTClaimsSet().getSubject();
+
+        var user = userRepository.findUserByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        var token = generateToken(user);
+
+        return AuthenticationResponse.builder()
+                .token(token)
+                .authenticated(true)
+                .build();
+
     }
 
 
