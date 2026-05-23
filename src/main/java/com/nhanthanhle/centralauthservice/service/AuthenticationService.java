@@ -116,7 +116,7 @@ public class AuthenticationService {
         invalidatedTokenRepository.save(invalidatedToken);
         var username = signJWT.getJWTClaimsSet().getSubject();
 
-        var user = userRepository.findUserByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        var user = userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         var token = generateToken(user);
 
@@ -129,7 +129,7 @@ public class AuthenticationService {
 
 
     public AuthenticationResponse authenticate(AuthenticationRequest authenticationRequest) {
-        var user = userRepository.findUserByUsername(authenticationRequest.getUsername()).orElseThrow(()
+        var user = userRepository.findByUsername(authenticationRequest.getUsername()).orElseThrow(()
                 -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
 
