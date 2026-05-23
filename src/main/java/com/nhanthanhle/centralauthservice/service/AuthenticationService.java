@@ -27,6 +27,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.text.ParseException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.StringJoiner;
 import java.util.UUID;
@@ -43,11 +45,24 @@ public class AuthenticationService {
     @Value("${jwt.signerKey}")
     protected String SIGNER_KEY;
 
-    private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
+
+    @NonFinal // để ko inject vào constructor
+    @Value("${jwt.valid-duration}")
+    protected Long VALID_DURATION;
+
+    @NonFinal // để ko inject vào constructor
+    @Value("${jwt.refreshable-duration}")
+    protected Long REFRESHABLE_DURATION;
+    private SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
         SignedJWT signedJWT = SignedJWT.parse(token);
         var verifed = signedJWT.verify(verifier);
-        Date expityTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        // nếu nó la token thi lấy thời gian issue + với thời gian tới hạn refresh
+        // còn không thì trả về lâấy thời gian hết hạn ra
+        Date expityTime = (isRefresh)
+                ? new Date(signedJWT.getJWTClaimsSet().getIssueTime()
+                           .toInstant().plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS).toEpochMilli())
+                : signedJWT.getJWTClaimsSet().getExpirationTime();
         if (!(verifed && expityTime.after(new Date())))
             throw new AppException(ErrorCode.UNAUTHENTICATED);
 
@@ -57,14 +72,19 @@ public class AuthenticationService {
         return signedJWT;
     }
     public void logout(LogoutRequest request) throws ParseException, JOSEException {
-        var signToken = verifyToken(request.getToken());
-        String jit = signToken.getJWTClaimsSet().getJWTID();
-        Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
+        try {
+            var signToken = verifyToken(request.getToken(), true);
+            String jit = signToken.getJWTClaimsSet().getJWTID();
+            Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
 
-        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
-                .id(jit)
-                .expiryTime(expiryTime)
-                .build();
+            InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                    .id(jit)
+                    .expiryTime(expiryTime)
+                    .build();
+        } catch (AppException e) {
+            log.info("Token is expiried");
+        }
+
     }
 
     public IntrospectResponse introspect(IntrospectRequest request)
@@ -72,7 +92,7 @@ public class AuthenticationService {
         var token = request.getToken();
         boolean isValid = true;
         try {
-            verifyToken(token);
+            verifyToken(token, false);
 
         } catch (AppException e) {
             isValid = false;
@@ -84,7 +104,7 @@ public class AuthenticationService {
 
     public AuthenticationResponse refreshToken(RefreshTokenRequest request) throws ParseException, JOSEException {
 
-        var signJWT = verifyToken(request.getToken());
+        var signJWT = verifyToken(request.getToken(), false);
         var jit = signJWT.getJWTClaimsSet().getJWTID();
         var expiryTime = signJWT.getJWTClaimsSet().getExpirationTime();
 
@@ -149,7 +169,9 @@ public class AuthenticationService {
                 .subject(user.getUsername())
                 .issuer("nhanthanhle.centralauthservice")
                 .issueTime(new Date())
-                .expirationTime(new Date(System.currentTimeMillis() + 3600 * 1000)) // 1h
+                .expirationTime(new Date(
+                        Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()
+                )) // 1h
                 .jwtID(UUID.randomUUID().toString()) // random unique string
                 .claim("scope", buildScope(user))
                 .build();

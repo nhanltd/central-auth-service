@@ -1,9 +1,9 @@
 
 spring:
   datasource:
-    url: "jdbc:mysql://localhost:3306/central_auth_service"
+    url: "jdbc:mysql://localhost:3307/central_auth_service"
     username: root
-    password: root
+    password: 123456
   jpa:
     hibernate:
       ddl-auto: update
@@ -26,3 +26,5 @@ logging:
 
 jwt:
   signerKey: "60de726f31ded068a7a1d7fe75e76c1aed2c91ee339eed322e5bfe3f9e9a0a66"
+  valid-duration: 360 #in second
+  refreshable-duration: 360000 #in second
