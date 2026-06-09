@@ -2,10 +2,7 @@ package com.nhanthanhle.centralauthservice.dto.request;
 
 import com.nhanthanhle.centralauthservice.validator.DobConstraint;
 import jakarta.validation.constraints.Size;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
@@ -13,6 +10,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Builder
 public class UserCreationRequest {
     @Size(min = 3, message = "USERNAME_INVALID")
     private String username;
